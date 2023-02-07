@@ -1,22 +1,79 @@
 package com.image;
 
+import com.image.Model.ImageRequest;
+import com.image.Model.ImageResponse;
+import com.image.Service.AddImageService;
+import com.image.Service.GetImageService;
+import com.image.Utils.ImageException;
+import com.image.Utils.Status;
+import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Arrays;
+import java.util.List;
 
 @RestController
 @Validated
+@RequestMapping("images")
 public class ApplicationController {
 
-    @PostMapping("/blogCreationService")
-    public ResponseEntity<BlogCreationResponse> blogCreation (@Valid @RequestBody BlogCreationRequest blogCreationRequest){
+    @Autowired
+    AddImageService addImageService;
+    @Autowired
+    GetImageService getImageService;
 
-        BlogCreationResponse blogCreationResponse = new BlogCreationResponse();
-        blogCreationResponse = blogService.createBlog(blogCreationRequest);
+    @PostMapping
+    public ResponseEntity<ImageResponse> addImage (@Valid @RequestBody ImageRequest imageRequest){
 
-        return ResponseEntity.ok(blogCreationResponse);
+        ImageResponse imageResponse = new ImageResponse();
+        try {
+            imageResponse = addImageService.addImage(imageRequest);
+        } catch (ImageException ex){
+            return handleException(ex);
+        }
+
+        return ResponseEntity.ok(imageResponse);
+    }
+
+
+    @GetMapping
+    public ResponseEntity<ImageResponse> getAllImages(){
+        ImageResponse imageResponse = getImageService.getAllImages();
+        if (imageResponse.getStatus().equals(Status.NOT_FOUND)){
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(imageResponse);
+    }
+
+    @GetMapping("/?objects=")
+    public ResponseEntity<ImageResponse> getAllImagesWithObject(){
+        ImageResponse imageResponse = new ImageResponse();
+        return ResponseEntity.ok(imageResponse);
+    }
+
+    @GetMapping("/{imageId}")
+    public ResponseEntity<ImageResponse> getImageById(@PathVariable("imageId") String imageId){
+        ImageResponse imageResponse = getImageService.getImage(imageId);
+        return ResponseEntity.ok(imageResponse);
+    }
+
+    @GetMapping("/test")
+    public List<String> blogCreation (){
+
+        return Arrays.asList("test", "success");
+    }
+
+    private ResponseEntity<ImageResponse> handleException(ImageException ex) {
+        if (Status.NOT_FOUND.equals(ex.getStatus())){
+            return ResponseEntity.notFound().build();
+        }else if (Status.BAD_REQUEST.equals(ex.getStatus())){
+            return ResponseEntity.badRequest().build();
+        }else{
+            return ResponseEntity.internalServerError().build();
+        }
     }
 
 
