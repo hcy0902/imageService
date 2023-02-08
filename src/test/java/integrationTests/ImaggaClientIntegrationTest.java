@@ -14,11 +14,6 @@ public class ImaggaClientIntegrationTest {
    private String baseUrl="http://localhost";
 
 
-    @Test
-    public void getObjectsFromImageSuccess(){
-
-        
-
-
-    }
+    //@Test
+   // public void getObjectsFromImageSuccess(){}
 }

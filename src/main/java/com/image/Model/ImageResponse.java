@@ -5,10 +5,10 @@ import lombok.Data;
 
 import java.util.List;
 @Data
-public class ImageResponse {
+public class ImageResponse extends Response{
 
     List<Image> images;
 
-    Status status;
+
 
 }

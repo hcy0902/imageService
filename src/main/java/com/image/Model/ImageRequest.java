@@ -1,10 +1,12 @@
 package com.image.Model;
 
 import jakarta.validation.constraints.NotNull;
+import lombok.Data;
 
+@Data
 public class ImageRequest {
 
-    Boolean detectObject;
+    boolean detectObject;
 
     @NotNull
     String imageUrl;

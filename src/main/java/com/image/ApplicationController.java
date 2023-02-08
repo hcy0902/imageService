@@ -2,12 +2,14 @@ package com.image;
 
 import com.image.Model.ImageRequest;
 import com.image.Model.ImageResponse;
+import com.image.Model.Response;
 import com.image.Service.AddImageService;
 import com.image.Service.GetImageService;
-import com.image.Utils.ImageException;
+import com.image.Model.ImageException;
 import com.image.Utils.Status;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -16,8 +18,7 @@ import java.util.Arrays;
 import java.util.List;
 
 @RestController
-@Validated
-@RequestMapping("images")
+@RequestMapping("/images")
 public class ApplicationController {
 
     @Autowired
@@ -25,40 +26,44 @@ public class ApplicationController {
     @Autowired
     GetImageService getImageService;
 
-    @PostMapping
-    public ResponseEntity<ImageResponse> addImage (@Valid @RequestBody ImageRequest imageRequest){
+    private static final String BAD_REQUEST_MESSAGE = "Bad Request, missing required field: ";
 
-        ImageResponse imageResponse = new ImageResponse();
-        try {
-            imageResponse = addImageService.addImage(imageRequest);
-        } catch (ImageException ex){
-            return handleException(ex);
+    @PostMapping
+    public ResponseEntity<Response> addImage (@RequestBody ImageRequest request){
+
+        Response response = new Response();
+
+        if (!validateRequest(request)){
+            response.setException(new ImageException(BAD_REQUEST_MESSAGE));
+            response.setStatus(Status.BAD_REQUEST);
+            return handleResponse(response);
         }
 
-        return ResponseEntity.ok(imageResponse);
+        response = addImageService.addImage(request);
+
+        return handleResponse(response);
     }
 
 
     @GetMapping
-    public ResponseEntity<ImageResponse> getAllImages(){
-        ImageResponse imageResponse = getImageService.getAllImages();
-        if (imageResponse.getStatus().equals(Status.NOT_FOUND)){
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok(imageResponse);
+    public ResponseEntity<Response> getAllImages(){
+
+        ImageResponse response = getImageService.getAllImages();
+
+        return handleResponse(response);
     }
 
     @GetMapping("/?objects=")
-    public ResponseEntity<ImageResponse> getAllImagesWithObject(){
-        ImageResponse imageResponse = new ImageResponse();
-        return ResponseEntity.ok(imageResponse);
+    public ResponseEntity<Response> getAllImagesWithObject(@RequestParam List<String> objects){
+        ImageResponse response = new ImageResponse();
+        return handleResponse(response);
     }
 
-    @GetMapping("/{imageId}")
-    public ResponseEntity<ImageResponse> getImageById(@PathVariable("imageId") String imageId){
-        ImageResponse imageResponse = getImageService.getImage(imageId);
-        return ResponseEntity.ok(imageResponse);
-    }
+//    @GetMapping("/{imageId}")
+//    public ResponseEntity<Response> getImageById(@PathVariable("imageId") String imageId){
+//        ImageResponse response = getImageService.getImage(imageId);
+//        return handleResponse(response);
+//    }
 
     @GetMapping("/test")
     public List<String> blogCreation (){
@@ -66,11 +71,19 @@ public class ApplicationController {
         return Arrays.asList("test", "success");
     }
 
-    private ResponseEntity<ImageResponse> handleException(ImageException ex) {
-        if (Status.NOT_FOUND.equals(ex.getStatus())){
+    private boolean validateRequest(ImageRequest request) {
+        if (request.getImageUrl().isEmpty()){
+            return false;
+        }
+
+        return true;
+    }
+
+    private ResponseEntity<Response> handleResponse(Response response) {
+        if (Status.NOT_FOUND.equals(response.getStatus())){
             return ResponseEntity.notFound().build();
-        }else if (Status.BAD_REQUEST.equals(ex.getStatus())){
-            return ResponseEntity.badRequest().build();
+        }else if (Status.BAD_REQUEST.equals(response.getStatus())){
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
         }else{
             return ResponseEntity.internalServerError().build();
         }
