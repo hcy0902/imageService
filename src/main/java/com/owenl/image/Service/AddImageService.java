@@ -40,13 +40,6 @@ public class AddImageService {
         List<DetectedObject> objectList = new ArrayList<>();
         String label = "";
 
-        //label generation
-        if (Objects.isNull(request.getImageLabel())) {
-            label = generateLabel();
-        } else {
-            label = request.getImageLabel();
-        }
-
         //call to imagga client
         // if we get error detecting object, do we still continue to save image into DB?
         if (request.isDetectObject()) {
@@ -56,6 +49,14 @@ public class AddImageService {
             } catch (ApplicationException ex) {
                 return handleException(ex);
             }
+        }
+
+        //label generation
+        //if it is detecting objects, append first Object from the list to image's label
+        if (Objects.isNull(request.getImageLabel()) || request.getImageLabel().isEmpty()) {
+            label = generateLabel(request.isDetectObject(), objectList);
+        } else {
+            label = request.getImageLabel();
         }
 
         //DB operation
@@ -125,8 +126,19 @@ public class AddImageService {
 
     }
 
-    private String generateLabel() {
+    private String generateLabel(boolean detectObject, List<DetectedObject> objectList) {
+        if (!detectObject){
+            return sdf1.format(new Timestamp(System.currentTimeMillis()));
+        }
+
         Timestamp timestamp = new Timestamp(System.currentTimeMillis());
-        return sdf1.format(timestamp);
+        StringBuilder sb = new StringBuilder();
+
+        sb.append(objectList.get(0).getName());
+        sb.append(" at time: ");
+        sb.append(sdf1.format(timestamp));
+
+
+        return sb.toString();
     }
 }

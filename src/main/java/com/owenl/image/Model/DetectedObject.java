@@ -9,7 +9,6 @@ public class DetectedObject {
 
     String name;
     String confidence;
-    int id;
 
     public DetectedObject (String name, String confidence){
         this.name = name;

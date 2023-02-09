@@ -66,7 +66,7 @@ public class ApplicationController {
     }
 
     @GetMapping("/test")
-    public List<String> blogCreation (){
+    public List<String> test (){
 
         return Arrays.asList("test", "success");
     }
