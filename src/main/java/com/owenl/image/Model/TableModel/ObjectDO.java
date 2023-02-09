@@ -1,9 +1,6 @@
 package com.owenl.image.Model.TableModel;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.Data;
 
 @Entity(name = "object")
@@ -11,19 +8,23 @@ import lombok.Data;
 public class ObjectDO {
 
     @Id
+    @Column(name = "id")
     @GeneratedValue(strategy = GenerationType.AUTO)
     private int id;
 
-    private int imageId;
+    @Column(name = "image_id")
+    private int image_Id;
 
+    @Column(name = "confidence")
     String confidence;
 
+    @Column(name = "name")
     String name;
 
-    public ObjectDO (String confidence,String name, int imageId){
+    public ObjectDO (String confidence,String name, int image_Id){
         this.confidence = confidence;
         this.name = name;
-        this.imageId = imageId;
+        this.image_Id = image_Id;
     }
 
 }

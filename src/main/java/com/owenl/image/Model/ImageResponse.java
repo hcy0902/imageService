@@ -9,5 +9,4 @@ public class ImageResponse extends Response{
     List<Image> images;
 
 
-
 }

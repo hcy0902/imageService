@@ -8,9 +8,10 @@ import java.math.BigDecimal;
 public class DetectedObject {
 
     String name;
-    BigDecimal confidence;
+    String confidence;
+    int id;
 
-    public DetectedObject (String name, BigDecimal confidence){
+    public DetectedObject (String name, String confidence){
         this.name = name;
         this.confidence = confidence;
     }

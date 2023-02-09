@@ -1,8 +1,10 @@
 package com.owenl.image.Bridge;
 
+import com.owenl.image.Model.ApplicationException;
 import com.owenl.image.Model.DetectedObject;
 import com.owenl.image.Model.Imagga.ImaggaResponse;
 import com.owenl.image.Utils.Model.Category;
+import com.owenl.image.Utils.Status;
 import org.apache.commons.codec.binary.Base64;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -22,9 +24,9 @@ public class ImaggaClient {
     //API secrit = ee34c6cd62883abc94befa7a5e487680
 
     private final String imaggaUri = "https://api.imagga.com/v2/categories/personal_photos?";
-    String url;
+    private static final String IMMAGA_SERVER_ERROR_MESSAGE = "Error session with Immaga server";
     String credential = "acc_e25711c7fc594ce:ee34c6cd62883abc94befa7a5e487680";
-    public List<DetectedObject> detectObject (String imageUrl) {
+    public List<DetectedObject> detectObject (String imageUrl) throws ApplicationException {
 
         List<DetectedObject> objects = new ArrayList<>();
 
@@ -39,7 +41,15 @@ public class ImaggaClient {
 
         HttpEntity<String> request = new HttpEntity<String>(headers);
         RestTemplate restTemplate = new RestTemplate();
-        ResponseEntity<ImaggaResponse> response = restTemplate.exchange(url.toString(), HttpMethod.GET, request, ImaggaResponse.class);
+
+        ResponseEntity<ImaggaResponse> response;
+        try {
+            response = restTemplate.exchange(url.toString(), HttpMethod.GET, request, ImaggaResponse.class);
+        } catch (Exception ex){
+            ApplicationException exception = new ApplicationException(ex, Status.INTERNAL_SERVER_ERROR, IMMAGA_SERVER_ERROR_MESSAGE );
+            throw exception;
+        }
+
 
         ImaggaResponse imaggaResponse = response.getBody();
 

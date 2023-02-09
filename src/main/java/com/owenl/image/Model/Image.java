@@ -12,4 +12,12 @@ public class Image {
     String imageLabel;
     int id;
 
+    public Image () {}
+
+    public Image (int id, String imageLabel, String imageUrl) {
+        this.id = id;
+        this.imageLabel = imageLabel;
+        this.imageUrl = imageUrl;
+    }
+
 }

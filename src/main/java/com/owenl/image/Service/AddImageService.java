@@ -27,6 +27,10 @@ public class AddImageService {
     ObjectRepository objectRepository;
 
     private static final SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss");
+    private static final String DB_INSERTION_ERROR_MESSAGE = "Error inserting into DB for: ";
+    private static final String IMAGE_INSERT_AND_DETECT_OBJECT_SUCCESS = "Successfully inserted image and detected object";
+    private static final String INSERT_IMAGE_SUCCESS = "Successfully inserted image";
+    private ApplicationException exception;
 
     public Response addImage(ImageRequest request) {
 
@@ -37,18 +41,19 @@ public class AddImageService {
         String label = "";
 
         //label generation
-        if (Objects.isNull(request.getImageLabel())){
+        if (Objects.isNull(request.getImageLabel())) {
             label = generateLabel();
-        }else{
+        } else {
             label = request.getImageLabel();
         }
 
         //call to imagga client
-        if (request.isDetectObject()){
-            try{
+        // if we get error detecting object, do we still continue to save image into DB?
+        if (request.isDetectObject()) {
+            try {
                 objectList = imaggaClient.detectObject(request.getImageUrl());
                 image.setObjects(objectList);
-            } catch (Exception ex){
+            } catch (ApplicationException ex) {
                 return handleException(ex);
             }
         }
@@ -56,33 +61,36 @@ public class AddImageService {
         //DB operation
         ImageDO imageDO = new ImageDO(label, request.getImageUrl());
 
-
-
-        try{
+        try {
             imageDO = imageRepository.save(imageDO);
 
-        } catch (Exception ex){
-            return handleException(ex);
+        } catch (Exception ex) {
+            exception = new ApplicationException(ex, Status.INTERNAL_SERVER_ERROR, DB_INSERTION_ERROR_MESSAGE +
+                    "Image");
+            return handleException(exception);
         }
 
         List<ObjectDO> objectDOS = new ArrayList<>();
-        if (!objectList.isEmpty()){
-            for (DetectedObject object : objectList){
-                objectDOS.add(new ObjectDO(object.getConfidence().toString(), object.getName(), imageDO.getId()));
+        if (!objectList.isEmpty()) {
+            for (DetectedObject object : objectList) {
+                objectDOS.add(new ObjectDO(object.getConfidence(), object.getName(), imageDO.getId()));
             }
         }
 
-        try{
-            if (!objectDOS.isEmpty()){
-                for (ObjectDO objectDO : objectDOS){
+        if (!objectDOS.isEmpty()) {
+
+            try {
+                for (ObjectDO objectDO : objectDOS) {
                     objectRepository.save(objectDO);
                 }
+
+            } catch (Exception ex) {
+                exception = new ApplicationException(ex, Status.INTERNAL_SERVER_ERROR, DB_INSERTION_ERROR_MESSAGE +
+                        "Objects");
+                return handleException(exception);
             }
 
-        } catch (Exception ex) {
-            return handleException(ex);
         }
-
 
 
         image.setImageUrl(imageDO.getUrl());
@@ -92,13 +100,25 @@ public class AddImageService {
         response.setStatus(Status.Ok);
         response.setImages(List.of(image));
 
-        return response;
+        if (request.isDetectObject()){
+            response.setMessage(IMAGE_INSERT_AND_DETECT_OBJECT_SUCCESS);
+        }else {
+            response.setMessage(INSERT_IMAGE_SUCCESS);
+        }
+
+
+        if (Objects.isNull(exception)){
+            return response;
+        }
+
+
+        return handleException(exception);
     }
 
-    private Response handleException(Exception exception) {
+    private Response handleException(ApplicationException exception) {
 
         Response response = new Response();
-        response.setStatus(Status.INTERNAL_SERVER_ERROR);
+        response.setStatus(exception.getStatus());
         response.setMessage(exception.getMessage());
 
         return response;

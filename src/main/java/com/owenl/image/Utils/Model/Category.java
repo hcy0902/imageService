@@ -6,5 +6,5 @@ import java.math.BigDecimal;
 @Data
 public class Category {
     Name name;
-    BigDecimal confidence;
+    String confidence;
 }

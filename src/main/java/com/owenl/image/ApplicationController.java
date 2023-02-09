@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 @RestController
 @RequestMapping("/images")
@@ -23,7 +24,7 @@ public class ApplicationController {
     @Autowired
     GetImageService getImageService;
 
-    private static final String BAD_REQUEST_MESSAGE = "Bad Request, missing required field: ";
+    private static final String BAD_REQUEST_MESSAGE = "Missing field in request. Image URL is either missing or empty ";
 
     @PostMapping
     public ResponseEntity<Response> addImage (@RequestBody ImageRequest request){
@@ -32,6 +33,7 @@ public class ApplicationController {
 
         if (!validateRequest(request)){
             response.setStatus(Status.BAD_REQUEST);
+            response.setMessage(BAD_REQUEST_MESSAGE);
             return handleResponse(response);
         }
 
@@ -46,20 +48,22 @@ public class ApplicationController {
 
         ImageResponse response = getImageService.getAllImages();
 
+
         return handleResponse(response);
     }
 
-    @GetMapping("/?objects=")
-    public ResponseEntity<Response> getAllImagesWithObject(@RequestParam List<String> objects){
-        ImageResponse response = new ImageResponse();
+    @GetMapping("/objects")
+    public ResponseEntity<Response> getAllImagesWithObject(@RequestParam("objects") List<String> objects){
+
+        Response response = getImageService.getImageByObject(objects);
         return handleResponse(response);
     }
 
-//    @GetMapping("/{imageId}")
-//    public ResponseEntity<Response> getImageById(@PathVariable("imageId") String imageId){
-//        ImageResponse response = getImageService.getImage(imageId);
-//        return handleResponse(response);
-//    }
+    @GetMapping("/{imageId}")
+    public ResponseEntity<Response> getImageById(@PathVariable("imageId") int imageId){
+        ImageResponse response = getImageService.getImage(imageId);
+        return handleResponse(response);
+    }
 
     @GetMapping("/test")
     public List<String> blogCreation (){
@@ -68,7 +72,9 @@ public class ApplicationController {
     }
 
     private boolean validateRequest(ImageRequest request) {
-        if (request.getImageUrl().isEmpty()){
+
+        //could have implemented Image URL format check too
+        if (Objects.isNull(request.getImageUrl()) || request.getImageUrl().isEmpty()){
             return false;
         }
 
@@ -80,8 +86,10 @@ public class ApplicationController {
             return ResponseEntity.notFound().build();
         }else if (Status.BAD_REQUEST.equals(response.getStatus())){
             return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        }else if (Status.INTERNAL_SERVER_ERROR.equals(response.getStatus())) {
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
         }else{
-            return ResponseEntity.internalServerError().build();
+            return new ResponseEntity<>(response, HttpStatus.OK);
         }
     }
 
