@@ -88,6 +88,8 @@ public class ApplicationController {
             return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
         }else if (Status.INTERNAL_SERVER_ERROR.equals(response.getStatus())) {
             return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        } else if (Status.PARTIAL.equals(response.getStatus())) {
+            return new ResponseEntity<>(response, HttpStatus.PARTIAL_CONTENT);
         }else{
             return new ResponseEntity<>(response, HttpStatus.OK);
         }

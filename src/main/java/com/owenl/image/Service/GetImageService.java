@@ -162,7 +162,7 @@ public class GetImageService {
 
         ImageResponse response = new ImageResponse();
         response.setStatus(exception.getStatus());
-        response.setMessage(exception.getMessage());
+        response.setErrorMessages(List.of(exception.getMessage()));
 
         return response;
 

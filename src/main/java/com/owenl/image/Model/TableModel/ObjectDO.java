@@ -3,6 +3,8 @@ package com.owenl.image.Model.TableModel;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.util.ArrayList;
+
 @Entity(name = "object")
 @Data
 public class ObjectDO {
@@ -25,6 +27,10 @@ public class ObjectDO {
         this.confidence = confidence;
         this.name = name;
         this.image_Id = image_Id;
+    }
+
+    public ObjectDO(){
+
     }
 
 }

@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -30,11 +31,15 @@ public class AddImageService {
     private static final String DB_INSERTION_ERROR_MESSAGE = "Error inserting into DB for: ";
     private static final String IMAGE_INSERT_AND_DETECT_OBJECT_SUCCESS = "Successfully inserted image and detected object";
     private static final String INSERT_IMAGE_SUCCESS = "Successfully inserted image";
+    private static final String IMAGGA_DETECTION_FAILURE = "Error calling IMAGGA server";
+
+    private static final boolean ENABLE_IMAGE_PROCESSING_WITH_DETECTION_FAILURE = false;
     private ApplicationException exception;
 
-    public Response addImage(ImageRequest request) {
+    public ImageResponse addImage(ImageRequest request) {
 
         ImageResponse response = new ImageResponse();
+        response.setErrorMessages(new ArrayList<>());
 
         Image image = new Image();
         List<DetectedObject> objectList = new ArrayList<>();
@@ -47,7 +52,11 @@ public class AddImageService {
                 objectList = imaggaClient.detectObject(request.getImageUrl());
                 image.setObjects(objectList);
             } catch (ApplicationException ex) {
-                return handleException(ex);
+                if (!ENABLE_IMAGE_PROCESSING_WITH_DETECTION_FAILURE){
+                    return handleException(ex);
+                }
+                response.setStatus(Status.PARTIAL);
+                response.getErrorMessages().add(IMAGGA_DETECTION_FAILURE);
             }
         }
 
@@ -98,10 +107,12 @@ public class AddImageService {
         image.setImageLabel(imageDO.getLabel());
         image.setId(imageDO.getId());
 
-        response.setStatus(Status.Ok);
+        if (response.getErrorMessages().isEmpty()){
+            response.setStatus(Status.Ok);
+        }
         response.setImages(List.of(image));
 
-        if (request.isDetectObject()){
+        if (request.isDetectObject() && !objectList.isEmpty()){
             response.setMessage(IMAGE_INSERT_AND_DETECT_OBJECT_SUCCESS);
         }else {
             response.setMessage(INSERT_IMAGE_SUCCESS);
@@ -116,18 +127,18 @@ public class AddImageService {
         return handleException(exception);
     }
 
-    private Response handleException(ApplicationException exception) {
+    private ImageResponse handleException(ApplicationException exception) {
 
-        Response response = new Response();
+        ImageResponse response = new ImageResponse();
         response.setStatus(exception.getStatus());
-        response.setMessage(exception.getMessage());
+        response.setErrorMessages(List.of(exception.getMessage()));
 
         return response;
 
     }
 
-    private String generateLabel(boolean detectObject, List<DetectedObject> objectList) {
-        if (!detectObject){
+    public String generateLabel(boolean detectObject, List<DetectedObject> objectList) {
+        if (!detectObject || objectList.isEmpty()){
             return sdf1.format(new Timestamp(System.currentTimeMillis()));
         }
 
@@ -137,7 +148,6 @@ public class AddImageService {
         sb.append(objectList.get(0).getName());
         sb.append(" at time: ");
         sb.append(sdf1.format(timestamp));
-
 
         return sb.toString();
     }
