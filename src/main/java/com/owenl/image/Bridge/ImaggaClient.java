@@ -15,7 +15,6 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,6 +26,10 @@ public class ImaggaClient {
     private final String imaggaUri = "https://api.imagga.com/v2/categories/personal_photos?";
     private static final String IMMAGA_SERVER_ERROR_MESSAGE = "Error session with Immaga server";
     String credential = "acc_e25711c7fc594ce:ee34c6cd62883abc94befa7a5e487680";
+
+    RestTemplate restTemplate = new RestTemplate();
+
+
     public List<DetectedObject> detectObject (String imageUrl) throws ApplicationException {
 
         List<DetectedObject> objects = new ArrayList<>();
@@ -41,7 +44,6 @@ public class ImaggaClient {
         headers.add("Authorization", "Basic " + new String(base64CredsBytes));
 
         HttpEntity<String> request = new HttpEntity<String>(headers);
-        RestTemplate restTemplate = new RestTemplate();
 
         ResponseEntity<ImaggaResponse> response;
         try {

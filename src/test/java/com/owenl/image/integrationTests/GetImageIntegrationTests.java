@@ -1,9 +1,5 @@
 package com.owenl.image.integrationTests;
 
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.fasterxml.jackson.databind.jsonschema.JsonSerializableSchema;
-import com.owenl.image.Model.Image;
-import com.owenl.image.Model.ImageResponse;
 import com.owenl.image.Model.Response;
 import com.owenl.image.Model.TableModel.ImageDO;
 import com.owenl.image.TestImageRepository;
@@ -13,10 +9,8 @@ import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.http.HttpMethod;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.*;
 

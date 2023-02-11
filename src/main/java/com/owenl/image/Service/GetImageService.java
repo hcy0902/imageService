@@ -24,6 +24,7 @@ public class GetImageService {
     private static final String NOT_FOUND_FOR_OBJECTS = "Not able to find images related to objects";
     private static final String NOT_FOUND_FOR_ID = "Not able to find Image with ID : ";
     private static final String NO_IMAGES_MESSAGE = "No images in DB";
+    private static final String FAILURE_RETRIEVE_IMAGES = "Failed to retrieve from DB";
     public ImageResponse getImage(int imageId){
 
         ImageResponse response = new ImageResponse();
@@ -37,7 +38,6 @@ public class GetImageService {
             return handleException(new ApplicationException(ex, Status.INTERNAL_SERVER_ERROR, RETRIEVE_DATA_ERROR_MESSAGE +
                     "ImageObjDO"));
         }
-
 
         Image image;
 
@@ -174,6 +174,7 @@ public class GetImageService {
         ImageResponse response = new ImageResponse();
         response.setStatus(exception.getStatus());
         response.setErrorDetails(List.of(exception.getMessage()));
+        response.setMessage(FAILURE_RETRIEVE_IMAGES);
 
         return response;
 

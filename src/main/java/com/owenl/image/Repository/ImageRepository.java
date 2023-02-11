@@ -24,7 +24,7 @@ public interface ImageRepository extends JpaRepository<ImageDO, Integer> {
     List<ImageObjDO> fetchImageObjectLeftOuterJoin();
 
     @Query("SELECT new com.owenl.image.Model.TableModel.ImageObjDO(i.id, i.label, i.url, o.id, o.confidence, o.name)" +
-            "FROM image as i LEFT OUTER JOIN object as o ON i.id = o.image_Id WHERE o.name IN (:names)")
+            "FROM image as i JOIN object as o ON i.id = o.image_Id WHERE o.name IN (:names)")
     List<ImageObjDO> fetchImagesByObject(@Param("names") List<String> names);
 
     @Query("SELECT new com.owenl.image.Model.TableModel.ImageObjDO(i.id, i.label, i.url, o.id, o.confidence, o.name)" +

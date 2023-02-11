@@ -114,5 +114,61 @@ public class AddImageServiceTest {
 
     }
 
+    @Test
+    public void addImageWithInvalidURLExceptionTest() throws ApplicationException {
+        ImageRequest request = new ImageRequest();
+        request.setImageLabel("test3");
+        request.setDetectObject(true);
 
+        List<DetectedObject> objectList = new ArrayList<>();
+        for (int i = 0; i < 5; i++){
+            objectList.add(new DetectedObject("test3", "123"));
+        }
+
+        List<String> list = new ArrayList<>();
+        list.add("Object detection failed with invalid image url");
+        list.add("Bad Request");
+        Response response = new Response();
+        response.setStatus(Status.BAD_REQUEST);
+        response.setErrorDetails(list);
+        response.setMessage("Failure evaluating image");
+
+        ImageDO imageDO = new ImageDO(request.getImageLabel(), request.getImageUrl());
+        imageDO.setId(10);
+        when(imaggaClient.detectObject(request.getImageUrl()))
+                .thenThrow(new ApplicationException(new Exception(), Status.BAD_REQUEST, "Bad Request"));
+
+
+        ImageResponse actual = addImageService.addImage(request);
+
+        Assertions.assertEquals(2, actual.getErrorDetails().size());
+        Assertions.assertEquals(response.getErrorDetails(), actual.getErrorDetails());
+        Assertions.assertNull(actual.getImages());
+        Assertions.assertEquals(response.getMessage(), actual.getMessage());
+        Assertions.assertEquals(response.getStatus(), actual.getStatus());
+    }
+
+    @Test
+    public void addImageWithNoObjectDetectionTest(){
+        ImageRequest imageRequest = new ImageRequest();
+        imageRequest.setDetectObject(false);
+        imageRequest.setImageLabel("test2");
+        imageRequest.setImageUrl("test2 URL");
+
+        Response response = new Response();
+        response.setStatus(Status.Ok);
+
+        ImageDO imageDo = new ImageDO(imageRequest.getImageLabel(), imageRequest.getImageUrl());
+        imageDo.setId(9);
+        when(imageRepository.save(any())).thenReturn(imageDo);
+        ImageResponse actual = addImageService.addImage(imageRequest);
+
+        Assertions.assertEquals(response.getStatus(),actual.getStatus());
+        Assertions.assertTrue(actual.getErrorDetails().isEmpty());
+        Assertions.assertEquals("Successfully inserted image", actual.getMessage());
+        Assertions.assertFalse(actual.getImages().isEmpty());
+        Assertions.assertEquals("test2", actual.getImages().get(0).getImageLabel());
+        Assertions.assertNull(actual.getImages().get(0).getObjects());
+    }
 }
+
