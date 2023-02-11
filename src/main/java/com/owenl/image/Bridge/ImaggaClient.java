@@ -11,6 +11,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 
@@ -46,8 +47,7 @@ public class ImaggaClient {
         try {
             response = restTemplate.exchange(url.toString(), HttpMethod.GET, request, ImaggaResponse.class);
         } catch (Exception ex){
-            ApplicationException exception = new ApplicationException(ex, Status.INTERNAL_SERVER_ERROR, IMMAGA_SERVER_ERROR_MESSAGE );
-            throw exception;
+            throw handleException(ex);
         }
 
 
@@ -61,6 +61,14 @@ public class ImaggaClient {
 
         return objects;
 
+    }
+
+    public ApplicationException handleException(Exception exception) {
+        //Imagga may throw 400 bad request if not able to download images for given url
+        if (exception instanceof HttpClientErrorException clientErrorException){
+            return new ApplicationException(exception, Status.BAD_REQUEST, clientErrorException.getStatusText());
+        }
+        return new ApplicationException(exception, Status.INTERNAL_SERVER_ERROR, "Server error during session with Imagga");
     }
 
 }

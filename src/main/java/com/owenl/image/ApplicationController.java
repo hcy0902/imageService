@@ -48,7 +48,6 @@ public class ApplicationController {
 
         ImageResponse response = getImageService.getAllImages();
 
-
         return handleResponse(response);
     }
 
@@ -72,7 +71,6 @@ public class ApplicationController {
     }
 
     private boolean validateRequest(ImageRequest request) {
-
         //could have implemented Image URL format check too
         if (Objects.isNull(request.getImageUrl()) || request.getImageUrl().isEmpty()){
             return false;

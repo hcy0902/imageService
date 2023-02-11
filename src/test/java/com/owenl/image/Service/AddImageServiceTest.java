@@ -24,7 +24,6 @@ import java.util.List;
 
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -107,11 +106,13 @@ public class AddImageServiceTest {
         ImageResponse actual = addImageService.addImage(request);
 
         Assertions.assertEquals(response.getStatus(),actual.getStatus());
-        Assertions.assertTrue(actual.getErrorMessages().isEmpty());
+        Assertions.assertTrue(actual.getErrorDetails().isEmpty());
         Assertions.assertEquals("Successfully inserted image and detected object", actual.getMessage());
         Assertions.assertFalse(actual.getImages().isEmpty());
         Assertions.assertEquals(5, actual.getImages().get(0).getObjects().size());
         Assertions.assertEquals("test1", actual.getImages().get(0).getObjects().get(0).getName());
 
     }
+
+
 }

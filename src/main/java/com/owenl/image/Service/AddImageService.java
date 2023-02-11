@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -31,7 +30,8 @@ public class AddImageService {
     private static final String DB_INSERTION_ERROR_MESSAGE = "Error inserting into DB for: ";
     private static final String IMAGE_INSERT_AND_DETECT_OBJECT_SUCCESS = "Successfully inserted image and detected object";
     private static final String INSERT_IMAGE_SUCCESS = "Successfully inserted image";
-    private static final String IMAGGA_DETECTION_FAILURE = "Error calling IMAGGA server";
+    private static final String IMAGGA_SERVER_FAILURE = "Error calling IMAGGA server";
+    private static final String IMAGGA_DETECTION_FALUE = "Object detection failed with invalid image url";
 
     private static final boolean ENABLE_IMAGE_PROCESSING_WITH_DETECTION_FAILURE = false;
     private ApplicationException exception;
@@ -39,7 +39,7 @@ public class AddImageService {
     public ImageResponse addImage(ImageRequest request) {
 
         ImageResponse response = new ImageResponse();
-        response.setErrorMessages(new ArrayList<>());
+        response.setErrorDetails(new ArrayList<>());
 
         Image image = new Image();
         List<DetectedObject> objectList = new ArrayList<>();
@@ -56,7 +56,11 @@ public class AddImageService {
                     return handleException(ex);
                 }
                 response.setStatus(Status.PARTIAL);
-                response.getErrorMessages().add(IMAGGA_DETECTION_FAILURE);
+                if (Status.BAD_REQUEST.equals(ex.getStatus())){
+                    response.getErrorDetails().add(IMAGGA_DETECTION_FALUE);
+                }else{
+                    response.getErrorDetails().add(IMAGGA_SERVER_FAILURE);
+                }
             }
         }
 
@@ -107,7 +111,7 @@ public class AddImageService {
         image.setImageLabel(imageDO.getLabel());
         image.setId(imageDO.getId());
 
-        if (response.getErrorMessages().isEmpty()){
+        if (response.getErrorDetails().isEmpty()){
             response.setStatus(Status.Ok);
         }
         response.setImages(List.of(image));
@@ -118,11 +122,9 @@ public class AddImageService {
             response.setMessage(INSERT_IMAGE_SUCCESS);
         }
 
-
         if (Objects.isNull(exception)){
             return response;
         }
-
 
         return handleException(exception);
     }
@@ -130,8 +132,13 @@ public class AddImageService {
     private ImageResponse handleException(ApplicationException exception) {
 
         ImageResponse response = new ImageResponse();
+        response.setErrorDetails(new ArrayList<>());
         response.setStatus(exception.getStatus());
-        response.setErrorMessages(List.of(exception.getMessage()));
+        response.setMessage("Failure evaluating image");
+        if (Status.BAD_REQUEST.equals(exception.getStatus())){
+            response.getErrorDetails().add(IMAGGA_DETECTION_FALUE);
+        }
+        response.getErrorDetails().add(exception.getMessage());
 
         return response;
 

@@ -2,9 +2,8 @@ package com.owenl.image.Model.TableModel;
 
 import jakarta.persistence.*;
 import lombok.Data;
-
-@Entity(name = "image")
 @Data
+@Entity(name = "image")
 public class ImageDO {
 
     @Id

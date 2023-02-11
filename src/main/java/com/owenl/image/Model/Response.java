@@ -10,7 +10,7 @@ public class Response {
 
     Status status;
     String message;
-    List<String> errorMessages;
+    List<String> errorDetails;
 
     public Response () {
 

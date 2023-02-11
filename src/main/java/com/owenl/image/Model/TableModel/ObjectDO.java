@@ -4,9 +4,8 @@ import jakarta.persistence.*;
 import lombok.Data;
 
 import java.util.ArrayList;
-
-@Entity(name = "object")
 @Data
+@Entity(name = "object")
 public class ObjectDO {
 
     @Id

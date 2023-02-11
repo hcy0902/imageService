@@ -23,9 +23,11 @@ public class GetImageService {
     private static final String SUCCESS_MESSAGE = "Retrieve images successful";
     private static final String NOT_FOUND_FOR_OBJECTS = "Not able to find images related to objects";
     private static final String NOT_FOUND_FOR_ID = "Not able to find Image with ID : ";
+    private static final String NO_IMAGES_MESSAGE = "No images in DB";
     public ImageResponse getImage(int imageId){
 
         ImageResponse response = new ImageResponse();
+        response.setErrorDetails(new ArrayList<>());
 
         List<ImageObjDO> imageObjDOs = new ArrayList<>();
 
@@ -66,6 +68,7 @@ public class GetImageService {
 
     public ImageResponse getAllImages() {
         ImageResponse response = new ImageResponse();
+        response.setErrorDetails(new ArrayList<>());
 
         List<ImageObjDO> imageObjDOs = new ArrayList();
 
@@ -75,6 +78,12 @@ public class GetImageService {
         } catch (Exception ex) {
             return handleException(new ApplicationException(ex, Status.INTERNAL_SERVER_ERROR, RETRIEVE_DATA_ERROR_MESSAGE +
                     "ImageObjectDO"));
+        }
+
+        if (imageObjDOs.isEmpty()){
+            response.setStatus(Status.Ok);
+            response.setMessage(NO_IMAGES_MESSAGE);
+            return response;
         }
 
         //Key as imageId
@@ -93,6 +102,8 @@ public class GetImageService {
     public ImageResponse getImageByObject(List<String> objects) {
 
         ImageResponse response = new ImageResponse();
+        response.setErrorDetails(new ArrayList<>());
+
         List<ImageObjDO> imageObjDOs = new ArrayList<>();
         try {
             imageObjDOs = imageRepository.fetchImagesByObject(objects);
@@ -162,7 +173,7 @@ public class GetImageService {
 
         ImageResponse response = new ImageResponse();
         response.setStatus(exception.getStatus());
-        response.setErrorMessages(List.of(exception.getMessage()));
+        response.setErrorDetails(List.of(exception.getMessage()));
 
         return response;
 
